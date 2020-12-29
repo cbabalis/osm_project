@@ -87,4 +87,27 @@ def update_edge_list(all_pairs_list, edges_list, col_name, cost):
     for pair in all_pairs_list:
         u, v = pair
         edges_list.loc[(edges_list.u == u) & (edges_list.v == v), col_name] += cost
-        
+
+
+def split_rows(df, li, ids):
+    """ Method to get a list of values and to assign each value to one row."""
+    ids_list = ids
+    for id in ids_list:
+        copied_df = df.copy()
+        copied_df.osmid = id
+        li.append(copied_df)
+
+
+def split_osmid_field(loaded_edges):
+    """ Method to split osmid field in a dataframe of edges."""
+    splitted_rows = []
+    print(len(splitted_rows))
+    for i in range(len(loaded_edges)):
+        df = loaded_edges.iloc[[i]]
+        osmid_contents = (df.osmid.to_list()).pop()
+        #pdb.set_trace()
+        if type(osmid_contents) is not list:
+            splitted_rows.append(df)
+        else:
+            split_rows(df, splitted_rows, osmid_contents)
+    return splitted_rows
