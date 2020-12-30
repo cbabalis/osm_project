@@ -54,6 +54,7 @@ def get_shortest_path(g, u, v, weight='length'):
     Returns a list of nodes.
     """
     shortest_path = nx.dijkstra_path(g, u, v, weight=weight)
+    #shortest_path = nx.astar_path(g, u, v, weight=weight)
     return shortest_path
 
 
@@ -111,3 +112,21 @@ def split_osmid_field(loaded_edges):
         else:
             split_rows(df, splitted_rows, osmid_contents)
     return splitted_rows
+
+
+def get_all_list_combinations(a_list):
+    """ Method to get all list combinations by two.
+    Returns a new list of tuples with every possible combination.
+    """
+    combos_list = []
+    for u in range(len(a_list)-1):
+        for v in range(u+1, len(a_list)):
+            combos_list.append((a_list[u], a_list[v]))
+    return combos_list
+
+
+def load_graph_from_disk(src_filepath):
+    """ Method to load and return a graph (in graphml) to memory.
+    """
+    graph = ox.load_graphml(src_filepath)
+    return graph
