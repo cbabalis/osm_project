@@ -3,7 +3,9 @@
 import pandas
 import networkx
 import network_operations as net_ops
+import min_path_ops.min_path_operations as min_ops
 import time
+import dijkstra
 import pdb
 
 
@@ -95,15 +97,20 @@ def scenario_all_in_all(src_graph_fp, csv_src_fp, results_csv_fpath, node):
     graph = net_ops.load_graph_from_disk(src_graph_fp)
     nodes, edges = net_ops.get_nodes_edges(graph)
     scenario_all_nodes_with_all(combo_list, graph, edges, 'traffic', results_csv_fpath)
-    pdb.set_trace()
     write_traffic_edges_to_csv(edges, results_csv_fpath)
+
+
+def custom_dijkstra(src_graph_fp, results_csv_fpath, node):
+    graph = net_ops.load_graph_from_disk(src_graph_fp)
+    nodes, edges = net_ops.get_nodes_edges(graph)
+    dijkstra_edges = min_ops.create_dijkstra_edge_list(edges, nodes)
+    dijkstra_path = dijkstra.dijkstra(edges, 3744263637, 300972555)
     pdb.set_trace()
-    
-        
 
 
 def main():
-    scenario_all_in_all('../results/greece.graphml', '../data/POINTS_NUTS3_MAINLAND3.csv', '../results/POINTS_NUTS3_MAINLAND3_RESULTS.csv', 'node_id')
+    custom_dijkstra('../results/greece.graphml', 'results.csv', 'osmid',)
+    #scenario_all_in_all('../results/greece.graphml', '../data/POINTS_NUTS3_MAINLAND3.csv', '../results/POINTS_NUTS3_MAINLAND3_RESULTS.csv', 'node_id')
     #simple_scenario_ipynb()
 
 
