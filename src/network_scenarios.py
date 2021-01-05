@@ -107,9 +107,12 @@ def custom_dijkstra(src_graph_fp, results_csv_fpath, node):
     dijkstra_path = dijkstra.dijkstra(dijkstra_edges, 295512257, 1604968703)
     print("dijkstra end")
     dist, dijkstra_node_list = min_ops.refine_dijkstra_results(dijkstra_path)
-    dijkstra_df = min_ops.get_dijkstra_nodes(nodes, dijkstra_node_list, id='osmid')
+    dijkstra_nodes_df = min_ops.get_dijkstra_matching_df(nodes, dijkstra_node_list, id='osmid')
     # write dijkstra nodes to csv
-    dijkstra_df.to_csv('../results/dijkstra_nodes.csv')
+    dijkstra_nodes_df.to_csv('../results/dijkstra_nodes.csv')
+    # write dijkstra edges to csv
+    dijkstra_edges_df = min_ops.get_dijkstra_matching_df(edges, dijkstra_node_list, id='u')
+    dijkstra_edges_df.to_csv('../results/dijkstra_edges.csv')
 
 
 def main():

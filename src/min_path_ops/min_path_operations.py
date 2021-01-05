@@ -90,15 +90,16 @@ def get_nodes_from_tuple(nodes_path, tuple_struct):
     get_nodes_from_tuple(nodes_path, tuple_struct[1])
 
 
-def get_dijkstra_nodes(nodes, dijkstra_nodes_list, id='osmid'):
-    """ Method to find and get nodes that are inside minimum path.
+def get_dijkstra_matching_df(df, dijkstra_nodes_list, id='osmid'):
+    """ Method to find and get nodes that are inside minimum path and
+    to get nodes and edges inside the initial network.
     :param nodes: pandas dataframe for nodes.
     :param dijkstra_nodes_list: a list with dijkstra nodes.
     """
     # create an empty pandas dataframe
-    dijkstra_df = pd.DataFrame(columns=nodes.columns)
+    dijkstra_df = pd.DataFrame(columns=df.columns)
     # populate new dataframe with the dijkstra nodes
     for dn in dijkstra_nodes_list:
-        node = nodes[nodes[id] == dn]
-        dijkstra_df = dijkstra_df.append(node)
+        row = df[df[id] == dn]
+        dijkstra_df = dijkstra_df.append(row)
     return dijkstra_df
