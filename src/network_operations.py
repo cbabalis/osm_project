@@ -106,7 +106,6 @@ def split_osmid_field(loaded_edges):
     for i in range(len(loaded_edges)):
         df = loaded_edges.iloc[[i]]
         osmid_contents = (df.osmid.to_list()).pop()
-        #pdb.set_trace()
         if type(osmid_contents) is not list:
             splitted_rows.append(df)
         else:

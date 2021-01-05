@@ -105,7 +105,7 @@ def custom_dijkstra(src_graph_fp, results_csv_fpath, node):
     nodes, edges = net_ops.get_nodes_edges(graph)
     dijkstra_edges = min_ops.create_dijkstra_edge_list(edges, nodes)
     dijkstra_path = dijkstra.dijkstra(dijkstra_edges, 295512257, 1604968703)
-    print("dijkstra end")
+    
     dist, dijkstra_node_list = min_ops.refine_dijkstra_results(dijkstra_path)
     dijkstra_nodes_df = min_ops.get_dijkstra_matching_df(nodes, dijkstra_node_list, id='osmid')
     # write dijkstra nodes to csv
@@ -115,8 +115,71 @@ def custom_dijkstra(src_graph_fp, results_csv_fpath, node):
     dijkstra_edges_df.to_csv('../results/dijkstra_edges.csv')
 
 
+def custom_dijkstra_all_vs_all(src_graph_fp, csv_src_fp, results_csv_fpath, node):
+    # read the csv file and get the list of nodes
+    df = pandas.read_csv(csv_src_fp, sep=';')
+    nodes_list = df[node].to_list()
+    combo_list = net_ops.get_all_list_combinations(nodes_list)
+    graph = net_ops.load_graph_from_disk(src_graph_fp)
+    nodes, edges = net_ops.get_nodes_edges(graph)
+    # get edges of network in appropriate form for custom dijkstra
+    dijkstra_edges = min_ops.create_dijkstra_edge_list(edges, nodes)
+    #TODO here we are
+    custom_dijkstra_all_nodes_vs_all(combo_list, graph, edges, 'traffic',
+                                dijkstra_edges, results_csv_fpath)
+
+
+def custom_dijkstra_all_nodes_vs_all(pairs_list, graph, edges, new_col,
+                                dijkstra_node_list, results_csv_fpath):
+    # create and initialize new column
+    net_ops.add_new_column_to_dataframe(edges, new_col)
+    # get every pair of list of pairs and run a min path between them
+    # updating the traffic in each route.
+    start_time = time.time()
+    pair_counter = 0 # TODO to be removed when not debugging
+    #length = len(pairs_list)
+    for pair in pairs_list:
+        u, v = pair
+        update_edges_list_with_custom_dijkstra_traffic(graph, edges, u, v, new_col, dijkstra_node_list)
+        #print("pair ", u, v, "\tupdated successfully\t(", pair_counter, "/", length, ")")
+        #pair_counter += 1
+    print("--- %s seconds custom min path ---" % (time.time() - start_time))
+
+
+def update_edges_list_with_custom_dijkstra_traffic(graph, edges, start1,
+                                            end1, new_col, dijkstra_edges):
+    try:
+        dijkstra_path = dijkstra.dijkstra(dijkstra_edges, start1, end1)
+        dist, dijkstra_node_list = min_ops.refine_dijkstra_results(dijkstra_path)
+        min_path_pairs = net_ops.get_nodes_pairs(dijkstra_node_list)
+        net_ops.update_edge_list(min_path_pairs, edges, new_col, 100)
+    except TypeError:
+        print("no path between ", start1, end1)
+
+
+def k_best_scenario(src_graph_fp, results_csv_fpath, node, k_nodes=[]):
+    """ Method to run a k-best scenario with mandatory "passing"
+    through every one of the k_nodes. If no k_nodes list is given then
+    a simple dijkstra is executed (k=1).
+    
+    :param:
+    """
+    # load network
+    graph = net_ops.load_graph_from_disk(src_graph_fp)
+    nodes, edges = net_ops.get_nodes_edges(graph)
+    dijkstra_edges = min_ops.create_dijkstra_edge_list(edges, nodes)
+    # initialize the k_best parameters
+    k_res = []
+    k_nodes = [3744263637, 300972555, 295512257, 1604968703]
+    min_ops.k_best(dijkstra_edges, k_nodes, '', '', k_res)
+    dist, k_best_list = min_ops.refine_k_best_results(k_res)
+    pdb.set_trace()
+
+
 def main():
-    custom_dijkstra('../results/greece.graphml', 'results.csv', 'osmid',)
+    k_best_scenario('../results/greece.graphml', 'results.csv', 'osmid',)
+    #custom_dijkstra_all_vs_all('../results/greece.graphml', '../data/POINTS_NUTS3_MAINLAND3.csv', 'skat', 'node_id')
+    #custom_dijkstra('../results/greece.graphml', 'results.csv', 'osmid',)
     #scenario_all_in_all('../results/greece.graphml', '../data/POINTS_NUTS3_MAINLAND3.csv', '../results/POINTS_NUTS3_MAINLAND3_RESULTS.csv', 'node_id')
     #simple_scenario_ipynb()
 

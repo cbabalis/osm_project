@@ -4,6 +4,7 @@ graphs, adjacency lists, etc.
 
 import math
 import pandas as pd
+import min_path_ops.dijkstra as dijkstra
 import pdb
 
 
@@ -84,6 +85,9 @@ def refine_dijkstra_results(dijkstra_struct):
 
 
 def get_nodes_from_tuple(nodes_path, tuple_struct):
+    """ recursive method which iterates a tuple containing a tuple
+    etc. and collecting tuple of tuples' values in a list.
+    """
     if not tuple_struct:
         return
     nodes_path.append(tuple_struct[0])
@@ -103,3 +107,38 @@ def get_dijkstra_matching_df(df, dijkstra_nodes_list, id='osmid'):
         row = df[df[id] == dn]
         dijkstra_df = dijkstra_df.append(row)
     return dijkstra_df
+
+
+def k_best(dijkstra_edges, mandatory_nodes_list, median_node,
+           end_node, results_list):
+    """ doc here IMP
+    """
+    #pdb.set_trace()
+    if not mandatory_nodes_list:
+        return
+    if median_node == end_node:
+        end_node = mandatory_nodes_list.pop()
+        median_node = mandatory_nodes_list.pop()
+        dijkstra_path = dijkstra.dijkstra(dijkstra_edges, median_node, end_node)
+        results_list.append(dijkstra_path)
+        return k_best(dijkstra_edges, mandatory_nodes_list,
+                      median_node, end_node, results_list)
+    end_node = median_node
+    median_node = mandatory_nodes_list.pop()
+    dijkstra_path = dijkstra.dijkstra(dijkstra_edges, median_node, end_node)
+    results_list.append(dijkstra_path)
+    return k_best(dijkstra_edges, mandatory_nodes_list,
+                    median_node, end_node, results_list)
+
+
+def refine_k_best_results(results_list):
+    """ doc
+    """
+    total_distance = 0
+    k_best_nodes_list = []
+    for a_tuple in results_list:
+        dist, nodes_path = refine_dijkstra_results(a_tuple)
+        total_distance += dist
+        k_best_nodes_list.extend(nodes_path)
+    return total_distance, k_best_nodes_list
+        
