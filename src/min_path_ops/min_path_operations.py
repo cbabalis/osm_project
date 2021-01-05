@@ -3,6 +3,7 @@ graphs, adjacency lists, etc.
 """
 
 import math
+import pandas as pd
 import pdb
 
 
@@ -44,9 +45,8 @@ def create_dijkstra_edge_list(edges, nodes):
         start_node = edge.u
         end_node = edge.v
         cost = edge.length#compute_travel_cost(start_node, end_node, nodes)
-        if cost != -1:
-            dijkstra_edge = (start_node, end_node, cost)
-            dijkstra_edge_list.append(dijkstra_edge)
+        dijkstra_edge = (start_node, end_node, cost)
+        dijkstra_edge_list.append(dijkstra_edge)
     return dijkstra_edge_list
 
 
@@ -62,4 +62,43 @@ def compute_travel_cost(u, v, node_list, id='osmid'):
     dist = compute_distance_between_points(u_x, u_y, v_x, v_y)
     # return the distance as the travel cost
     return dist
+
+
+def refine_dijkstra_results(dijkstra_struct):
+    """ Method to refine dijkstra structure that contains results.
     
+    Dijkstra structure is as follows:
+    (dist, (n1, (n2, (n3, ...))))
+    It is a tuple inside a tuple recursively.
+    
+    Return: distance and a list of nodes defining the path.
+    """
+    # split distance and path of nodes
+    dist = dijkstra_struct[0]
+    path = dijkstra_struct[1]
+    # process nodes. Iterate tuple until empty and remove nodes one by
+    # one until the empty tuple is being found.
+    nodes_path = []
+    get_nodes_from_tuple(nodes_path, path)
+    return dist, nodes_path
+
+
+def get_nodes_from_tuple(nodes_path, tuple_struct):
+    if not tuple_struct:
+        return
+    nodes_path.append(tuple_struct[0])
+    get_nodes_from_tuple(nodes_path, tuple_struct[1])
+
+
+def get_dijkstra_nodes(nodes, dijkstra_nodes_list, id='osmid'):
+    """ Method to find and get nodes that are inside minimum path.
+    :param nodes: pandas dataframe for nodes.
+    :param dijkstra_nodes_list: a list with dijkstra nodes.
+    """
+    # create an empty pandas dataframe
+    dijkstra_df = pd.DataFrame(columns=nodes.columns)
+    # populate new dataframe with the dijkstra nodes
+    for dn in dijkstra_nodes_list:
+        node = nodes[nodes[id] == dn]
+        dijkstra_df = dijkstra_df.append(node)
+    return dijkstra_df

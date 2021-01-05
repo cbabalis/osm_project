@@ -5,7 +5,7 @@ import networkx
 import network_operations as net_ops
 import min_path_ops.min_path_operations as min_ops
 import time
-import dijkstra
+import min_path_ops.dijkstra as dijkstra
 import pdb
 
 
@@ -104,8 +104,12 @@ def custom_dijkstra(src_graph_fp, results_csv_fpath, node):
     graph = net_ops.load_graph_from_disk(src_graph_fp)
     nodes, edges = net_ops.get_nodes_edges(graph)
     dijkstra_edges = min_ops.create_dijkstra_edge_list(edges, nodes)
-    dijkstra_path = dijkstra.dijkstra(edges, 3744263637, 300972555)
-    pdb.set_trace()
+    dijkstra_path = dijkstra.dijkstra(dijkstra_edges, 295512257, 1604968703)
+    print("dijkstra end")
+    dist, dijkstra_node_list = min_ops.refine_dijkstra_results(dijkstra_path)
+    dijkstra_df = min_ops.get_dijkstra_nodes(nodes, dijkstra_node_list, id='osmid')
+    # write dijkstra nodes to csv
+    dijkstra_df.to_csv('../results/dijkstra_nodes.csv')
 
 
 def main():
