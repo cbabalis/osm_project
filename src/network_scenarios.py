@@ -2,6 +2,7 @@
 
 import pandas
 import networkx
+import osmnx as ox
 import network_operations as net_ops
 import min_path_ops.min_path_operations as min_ops
 import time
@@ -175,9 +176,58 @@ def k_best_scenario(src_graph_fp, results_csv_fpath, node, k_nodes=[]):
     dist, k_best_list = min_ops.refine_k_best_results(k_res)
     pdb.set_trace()
 
+#####################################################
+
+def get_network_lvls_scenario(src_csv_fpath, orig_node, dest_node, dest_name):
+    """ Scenario where a min path is run between O-D points.
+    
+    Destination should be downloaded in high detail. Same goes for the
+    neighbour local networks too.
+    """
+    # get neighbours from file
+    neighbor_dict = get_neighbors_from_file(src_csv_fpath)
+    # search for the neighbors of the given node and download them
+    graph = create_detailed_network(neighbor_dict, dest_name)
+    # create the big network and save it.
+    pdb.set_trace()
+    # run a min path there
+
+
+def get_neighbors_from_file(src_csv_fpath):
+    content = ''
+    neighbor_dict = {}
+    with open(src_csv_fpath, 'r') as f:
+        content = f.readlines()
+    for line in content:
+        key, val = line.split(":")
+        val = val.replace("\n", "")
+        vals = [x for x in val.split(",")]
+        neighbor_dict[key] = vals
+    return neighbor_dict
+
+
+def create_detailed_network(neighbor_dict, dest_name):
+    assert (dest_name in neighbor_dict), "destination name not in network!"
+    neighbors = neighbor_dict[dest_name]
+    graph = get_greece_graph()
+    for neighbor in neighbors:
+        neighbor_graph = ox.graph_from_place(neighbor, network_type='drive')
+        graph = networkx.compose(graph, neighbor_graph)
+    return graph
+
+
+def get_greece_graph():
+    place_name = "Greece"
+    ox.config(use_cache=True, log_console=True)
+    #cf = '["highway"~"motorway|motorway_link|trunk|secondary|primary"]'
+    cf = '["highway"~"motorway|motorway_link"]'
+    greece_graph = ox.graph_from_place(place_name, network_type='drive', custom_filter=cf)
+    return greece_graph
+
 
 def main():
-    k_best_scenario('../results/greece.graphml', 'results.csv', 'osmid',)
+    n = get_network_lvls_scenario('../data/dimoi_athinas.csv',3744263637, 300972555, 'Zografou')
+    #k_best_scenario('../results/greece.graphml', 'results.csv', 'osmid',)
     #custom_dijkstra_all_vs_all('../results/greece.graphml', '../data/POINTS_NUTS3_MAINLAND3.csv', 'skat', 'node_id')
     #custom_dijkstra('../results/greece.graphml', 'results.csv', 'osmid',)
     #scenario_all_in_all('../results/greece.graphml', '../data/POINTS_NUTS3_MAINLAND3.csv', '../results/POINTS_NUTS3_MAINLAND3_RESULTS.csv', 'node_id')
