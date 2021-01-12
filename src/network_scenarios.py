@@ -211,8 +211,11 @@ def create_detailed_network(neighbor_dict, dest_name):
     neighbors = neighbor_dict[dest_name]
     graph = get_greece_graph()
     for neighbor in neighbors:
-        neighbor_graph = ox.graph_from_place(neighbor, network_type='drive')
-        graph = networkx.compose(graph, neighbor_graph)
+        try:
+            neighbor_graph = ox.graph_from_place(neighbor, network_type='drive')
+            graph = networkx.compose(graph, neighbor_graph)
+        except ValueError as e:
+            print ('%s neighbour cannot be downloaded' % neighbor)
     return graph
 
 
@@ -225,8 +228,46 @@ def get_greece_graph():
     return greece_graph
 
 
+#############################
+def get_athens_local_networks_scenario(src_csv_fpath, dest_graph_fpath):
+    save_acquired_from_file_graphs_to_disk(src_csv_fpath, dest_graph_fpath)
+    pdb.set_trace()
+
+
+def save_acquired_from_file_graphs_to_disk(src_csv_fpath, dest_graph_fpath):
+    """ Method to get names from a file, to acquire graphs from OSM data
+    and to save graphs to disk.
+    """
+    neighbor_dict = get_neighbors_from_file(src_csv_fpath)
+    for neighbor in neighbor_dict:
+        local_graph = get_graph_from_osm(neighbor)
+        if local_graph:
+            destination = dest_graph_fpath + str(neighbor) +str('.graphml')
+            ox.save_graphml(local_graph, destination)
+        else:
+            print("graph named %s cannot be acquired" % neighbor)
+
+
+def get_graph_from_osm(place_name):
+    try:
+        neighbor_graph = ox.graph_from_place(place_name, network_type='drive')
+    except ValueError as e:
+        print('%s neighbour cannot be downloaded' % place_name)
+        return False
+    return neighbor_graph
+
+
 def main():
-    n = get_network_lvls_scenario('../data/dimoi_athinas.csv',3744263637, 300972555, 'Zografou')
+    li = ['Vyronas', 'Papagos']
+    for l in li:
+        local_graph = get_graph_from_osm(l)
+        if local_graph:
+            destination = '../results/graphs/' + str(l) +str('.graphml')
+            ox.save_graphml(local_graph, destination)
+        else:
+            print("graph named %s cannot be acquired" % l)
+    #save_acquired_from_file_graphs_to_disk('../data/dimoi_athinas.csv', '../results/graphs/')
+    #n = get_network_lvls_scenario('../data/dimoi_athinas.csv',3744263637, 300972555, 'Zografou')
     #k_best_scenario('../results/greece.graphml', 'results.csv', 'osmid',)
     #custom_dijkstra_all_vs_all('../results/greece.graphml', '../data/POINTS_NUTS3_MAINLAND3.csv', 'skat', 'node_id')
     #custom_dijkstra('../results/greece.graphml', 'results.csv', 'osmid',)
