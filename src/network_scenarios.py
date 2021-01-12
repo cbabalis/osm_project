@@ -7,6 +7,8 @@ import network_operations as net_ops
 import min_path_ops.min_path_operations as min_ops
 import time
 import min_path_ops.dijkstra as dijkstra
+from os import listdir  # in need for searching in folders
+from os.path import isfile, join  # in need for searching in folders
 import pdb
 
 
@@ -202,6 +204,8 @@ def get_neighbors_from_file(src_csv_fpath):
         key, val = line.split(":")
         val = val.replace("\n", "")
         vals = [x for x in val.split(",")]
+        vals = [val.strip() for val in vals]
+        print(vals)
         neighbor_dict[key] = vals
     return neighbor_dict
 
@@ -229,14 +233,58 @@ def get_greece_graph():
 
 
 #############################
-def get_athens_local_networks_scenario(src_csv_fpath, dest_graph_fpath):
-    save_acquired_from_file_graphs_to_disk(src_csv_fpath, dest_graph_fpath)
+def get_athens_local_networks_scenario(src_csv_fpath, src_graph_folder,
+                                       dest_area, origin_node, dest_node):
+    #save_acquired_from_file_graphs_to_disk(src_csv_fpath, dest_graph_fpath)
+    # get neighbors of dictionary
+    neighbor_dict = get_neighbors_from_file(src_csv_fpath)
+    # get all graphs that represent the local networks of an area respectively
+    graphs_in_disk_list = get_graph_files_from_disk(src_graph_folder)
+    # acquire all graphs in the disk that match the neighbor_dict
+    super_graph = create_super_network(neighbor_dict, src_graph_folder,
+                                       graphs_in_disk_list, dest_area)
+    # create a super-network joining all local networks
     pdb.set_trace()
+
+
+def get_graph_files_from_disk(source_folder):
+    """ method to get the files where graphs (in graphml) are saved.
+    """
+    sf = source_folder
+    onlyfiles = [f for f in listdir(sf) if isfile(join(sf, f))]
+    return onlyfiles
+
+
+def create_super_network(neighbor_dict, src_graph_folder,
+                         graphs_in_disk_list, dest_area):
+    """ method to create a graph from an abstract high-level graph and
+    local graphs."""
+    # get greek high-level network
+    greece_path = '../results/greece.graphml'
+    graph = net_ops.load_graph_from_disk(greece_path)
+    # get the neighbors of the destination area
+    local_graphs = neighbor_dict[dest_area]
+    # acquire all neighbors that have a graph representation in disk
+    for lc in local_graphs:
+        for gdl in graphs_in_disk_list:
+            if lc in gdl:
+                gdl_path = src_graph_folder + str(gdl)
+                loc_graph = net_ops.load_graph_from_disk(gdl_path)
+                graph = networkx.compose(graph, loc_graph)
+                print("%s found and merged to graph." % lc)
+                break
+        else:
+            print("%s not found in disk. Procceed without it." % lc)
+    return graph
 
 
 def save_acquired_from_file_graphs_to_disk(src_csv_fpath, dest_graph_fpath):
     """ Method to get names from a file, to acquire graphs from OSM data
     and to save graphs to disk.
+    
+    :param src_csv_path: str, filepath where the csv with the adjacency matrix is.
+    :param dest_graph_fpath: str, folder WITH slash in the end where the graph
+        results are being saved.
     """
     neighbor_dict = get_neighbors_from_file(src_csv_fpath)
     for neighbor in neighbor_dict:
@@ -258,14 +306,8 @@ def get_graph_from_osm(place_name):
 
 
 def main():
-    li = ['Vyronas', 'Papagos']
-    for l in li:
-        local_graph = get_graph_from_osm(l)
-        if local_graph:
-            destination = '../results/graphs/' + str(l) +str('.graphml')
-            ox.save_graphml(local_graph, destination)
-        else:
-            print("graph named %s cannot be acquired" % l)
+    get_athens_local_networks_scenario('../data/dimoi_athinas.csv', '../results/graphs/',
+                                       'Zografou', 3744263637, 300972555)
     #save_acquired_from_file_graphs_to_disk('../data/dimoi_athinas.csv', '../results/graphs/')
     #n = get_network_lvls_scenario('../data/dimoi_athinas.csv',3744263637, 300972555, 'Zografou')
     #k_best_scenario('../results/greece.graphml', 'results.csv', 'osmid',)
