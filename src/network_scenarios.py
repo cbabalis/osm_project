@@ -103,19 +103,29 @@ def scenario_all_in_all(src_graph_fp, csv_src_fp, results_csv_fpath, node):
     write_traffic_edges_to_csv(edges, results_csv_fpath)
 
 
-def custom_dijkstra(src_graph_fp, results_csv_fpath, node):
+def custom_dijkstra(src_graph_fp, results_folder, origin_node, dest_node):
     graph = net_ops.load_graph_from_disk(src_graph_fp)
     nodes, edges = net_ops.get_nodes_edges(graph)
     dijkstra_edges = min_ops.create_dijkstra_edge_list(edges, nodes)
-    dijkstra_path = dijkstra.dijkstra(dijkstra_edges, 295512257, 1604968703)
+    dijkstra_path = dijkstra.dijkstra(dijkstra_edges, origin_node, dest_node)
     
     dist, dijkstra_node_list = min_ops.refine_dijkstra_results(dijkstra_path)
     dijkstra_nodes_df = min_ops.get_dijkstra_matching_df(nodes, dijkstra_node_list, id='osmid')
-    # write dijkstra nodes to csv
-    dijkstra_nodes_df.to_csv('../results/dijkstra_nodes.csv')
-    # write dijkstra edges to csv
+    # write results to files
     dijkstra_edges_df = min_ops.get_dijkstra_matching_df(edges, dijkstra_node_list, id='u')
-    dijkstra_edges_df.to_csv('../results/dijkstra_edges.csv')
+    write_results_to_disk(results_folder, origin_node, dest_node, dijkstra_nodes_df, dijkstra_edges_df)
+
+
+def write_results_to_disk(results_folder, origin_node, dest_node,
+                          dijkstra_nodes_df, dijkstra_edges_df):
+    """ doc here IMP """
+    # create filepaths for nodes and edges respectively
+    min_path_fname = results_folder + str(origin_node) +'_to_' + str(dest_node)
+    nodes_fpath = min_path_fname + 'dijkstra_nodes.csv'
+    edges_fpath = min_path_fname + 'dijkstra_edges.csv'
+    # write nodes and edges to csv
+    dijkstra_nodes_df.to_csv(nodes_fpath)
+    dijkstra_edges_df.to_csv(edges_fpath)
 
 
 def custom_dijkstra_all_vs_all(src_graph_fp, csv_src_fp, results_csv_fpath, node):
@@ -240,11 +250,14 @@ def get_athens_local_networks_scenario(src_csv_fpath, src_graph_folder,
     neighbor_dict = get_neighbors_from_file(src_csv_fpath)
     # get all graphs that represent the local networks of an area respectively
     graphs_in_disk_list = get_graph_files_from_disk(src_graph_folder)
-    # acquire all graphs in the disk that match the neighbor_dict
+    # acquire all graphs in the disk that match the neighbor_dict and
+    # create a super-network joining all local networks
     super_graph = create_super_network(neighbor_dict, src_graph_folder,
                                        graphs_in_disk_list, dest_area)
-    # create a super-network joining all local networks
-    pdb.set_trace()
+    # save graph to disk
+    supergraph_dest = '../results/supergraph.graphml'
+    ox.save_graphml(super_graph, supergraph_dest)
+    return super_graph
 
 
 def get_graph_files_from_disk(source_folder):
@@ -305,9 +318,18 @@ def get_graph_from_osm(place_name):
     return neighbor_graph
 
 
+def plot_route_in_graph(graph,u,v):
+    """ todo doc and move"""
+    shortest_path = net_ops.get_shortest_path(graph, u, v)
+    rc = ['r', 'y', 'c']
+    fig, ax = ox.plot_graph_route(graph, shortest_path)
+
+
 def main():
-    get_athens_local_networks_scenario('../data/dimoi_athinas.csv', '../results/graphs/',
-                                       'Zografou', 3744263637, 300972555)
+    super_graph = get_athens_local_networks_scenario('../data/dimoi_athinas.csv', '../results/graphs/',
+                                       'Zografou', 3744263637, 36454255)
+    custom_dijkstra('../results/supergraph.graphml', '../results/', 3744263637, 36454255)
+    plot_route_in_graph(super_graph, 3744263637, 36454255)
     #save_acquired_from_file_graphs_to_disk('../data/dimoi_athinas.csv', '../results/graphs/')
     #n = get_network_lvls_scenario('../data/dimoi_athinas.csv',3744263637, 300972555, 'Zografou')
     #k_best_scenario('../results/greece.graphml', 'results.csv', 'osmid',)
