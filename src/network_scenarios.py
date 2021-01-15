@@ -327,12 +327,13 @@ def plot_route_in_graph(graph,u,v):
 
 def main():
     super_graph = get_athens_local_networks_scenario('../data/dimoi_athinas.csv', '../results/graphs/',
-                                       'Zografou', 3744263637, 36454255)
-    custom_dijkstra('../results/supergraph.graphml', '../results/', 3744263637, 36454255)
-    plot_route_in_graph(super_graph, 3744263637, 36454255)
+                                       'Tavros', 3744263637, 8067989857)
+    custom_dijkstra('../results/supergraph.graphml', '../results/', 3744263637, 8067989857)
+    plot_route_in_graph(super_graph, 3744263637, 8067989857)
+    
     #save_acquired_from_file_graphs_to_disk('../data/dimoi_athinas.csv', '../results/graphs/')
     #n = get_network_lvls_scenario('../data/dimoi_athinas.csv',3744263637, 300972555, 'Zografou')
-    #k_best_scenario('../results/greece.graphml', 'results.csv', 'osmid',)
+    #k_best_scenario('../results/greece.graphml', 'results.csv', 'osmid')
     #custom_dijkstra_all_vs_all('../results/greece.graphml', '../data/POINTS_NUTS3_MAINLAND3.csv', 'skat', 'node_id')
     #custom_dijkstra('../results/greece.graphml', 'results.csv', 'osmid',)
     #scenario_all_in_all('../results/greece.graphml', '../data/POINTS_NUTS3_MAINLAND3.csv', '../results/POINTS_NUTS3_MAINLAND3_RESULTS.csv', 'node_id')
