@@ -7,6 +7,7 @@ import network_operations as net_ops
 import min_path_ops.min_path_operations as min_ops
 import time
 import min_path_ops.dijkstra as dijkstra
+import geopandas as gpd
 from os import listdir  # in need for searching in folders
 from os.path import isfile, join  # in need for searching in folders
 import pdb
@@ -325,7 +326,7 @@ def plot_route_in_graph(graph,u,v):
     fig, ax = ox.plot_graph_route(graph, shortest_path)
 
 
-def main():
+def run_tavros_scenario():
     super_graph = get_athens_local_networks_scenario('../data/dimoi_athinas.csv', '../results/graphs/',
                                        'Tavros', 3744263637, 8067989857)
     custom_dijkstra('../results/supergraph.graphml', '../results/', 3744263637, 8067989857)
@@ -334,7 +335,34 @@ def main():
     #babis
     nodes, edges = net_ops.get_nodes_edges(super_graph)
     net_ops.write_nodes_edges_to_disk(nodes, edges, 'supergraph', '../results/')
-    
+
+
+#######################
+
+def supermarkets_vrp_google_scenario(athens_network_path,
+                                     supermarkets_path,
+                                     results_path):
+    # load athens network path and get nodes and edges
+    graph = net_ops.load_graph_from_disk(athens_network_path)
+    # get and update athens nodes with supermarket field
+    nodes, edges = net_ops.get_nodes_edges(graph)
+    nodes['supermarket'] = 'None'
+    # load supermarkets path
+    supermarkets = gpd.read_file(supermarkets_path)
+    # project supermarkets nodes in athens network
+    net_sm_nodes = net_ops.get_matched_node_ids(supermarkets, graph)
+    pdb.set_trace()
+    # create adjacency matrix with minimum paths ready for google vrp
+    # run google vrp
+    # get results
+    pass
+
+
+def main():
+    supermarkets_vrp_google_scenario('../results/attica_graph.graphml',
+                                     '../data/supermarkets-attica.geojson',
+                                     '../results/')
+    # run_tavros_scenario()
     #save_acquired_from_file_graphs_to_disk('../data/dimoi_athinas.csv', '../results/graphs/')
     #n = get_network_lvls_scenario('../data/dimoi_athinas.csv',3744263637, 300972555, 'Zografou')
     #k_best_scenario('../results/greece.graphml', 'results.csv', 'osmid')

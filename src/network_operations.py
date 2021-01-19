@@ -132,7 +132,101 @@ def load_graph_from_disk(src_filepath):
 
 
 def write_nodes_edges_to_disk(nodes, edges, fname, fpath):
+    """ Method to write nodes and edges of a networkx graph to disk.
+    
+    This method getas as arguments the nodes, the edges, the name of 
+    the file and the path to the file and it creates two new files:
+    1. 'path_to_file/filename_nodes.csv' and
+    2. 'path_to_file/filename_edges.csv'
+
+    Args:
+        nodes (dataframe): The nodes of a networkx graph
+        edges (dataframe): The edges of a networkx graph
+        fname (str): The name of the file.
+        fpath (str): The path where the file will be created (it should
+        end to '/').
+    """
     nodes_fpath = fpath + fname + '_nodes.csv'
     nodes.to_csv(nodes_fpath)
     edges_fpath = fpath + fname + '_edges.csv'
     edges.to_csv(edges_fpath)
+
+
+def get_matched_node_ids(supermarkets_df, graph):
+    """method to get all matching node ids from graph nodes that match
+    the nodes of supermarkets_df
+
+    Args:
+        supermarkets_df (dataframe): contains supermarkets
+        graph (graph): Graph of network.
+
+    Returns:
+        list: list of (str) ids.
+    """
+    nodes_list = []
+    # get all supermarket (y, x) points
+    markets_coords_list = get_supermarket_geometry(supermarkets_df)
+    return nodes_list
+
+
+def get_supermarket_geometry(supermarkets):
+    geometry_points = []
+    geometries = supermarkets.geometry.to_list()
+    for geometry in geometries:
+        if geometry.geom_type == 'Polygon':
+            point = get_random_point_from_polygon_geometry(geometry)
+            geometry_points.append(point)
+        elif geometry.geom_type == 'Point':
+            point = (geometry.y, geometry.x)
+            geometry_points.append(point)
+    return geometry_points
+
+
+def get_random_point_from_polygon_geometry(geometry):
+    """Method to get a random point (x, y) from a polygon.
+
+    Args:
+        geometry (Polygon): A row of a dataframe
+
+    Returns:
+        tuple: (y, x) geometry in a tuple
+    """
+    point = 0
+    coord_sequence = geometry.exterior.coords
+    for cs in coord_sequence:
+        point = cs
+    return point
+
+
+
+def get_nearest_node_id_from_graph(node, graph):
+    """Method that given a node, it gets the nearest node in a graph.
+
+    Args:
+        node (node): Node given to be searched in a graph
+        graph (graph): A graph with nodes and edges.
+    
+    Returns:
+        str: node id
+    """
+    # get the geometry (y, x) of the node.
+    geometry_of_node = get_node_geometry(node)
+    # get the nearest node of the graph
+    nearest_node_id = ox.get_nearest_node(graph, geometry_of_node)
+    # update graph with osm id for supermarket TODO
+    # return the node
+    return nearest_node_id
+
+
+def get_node_geometry(node):
+    """Method to get the geometry of a node.
+
+    Args:
+        node (node): The node given.
+
+    Returns:
+        tuple: y, x coordinates.
+    """
+    y = node.y
+    x = node.x
+    return (y, x)
