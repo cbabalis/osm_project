@@ -129,3 +129,10 @@ def load_graph_from_disk(src_filepath):
     """
     graph = ox.load_graphml(src_filepath)
     return graph
+
+
+def write_nodes_edges_to_disk(nodes, edges, fname, fpath):
+    nodes_fpath = fpath + fname + '_nodes.csv'
+    nodes.to_csv(nodes_fpath)
+    edges_fpath = fpath + fname + '_edges.csv'
+    edges.to_csv(edges_fpath)

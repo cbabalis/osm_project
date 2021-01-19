@@ -331,6 +331,10 @@ def main():
     custom_dijkstra('../results/supergraph.graphml', '../results/', 3744263637, 8067989857)
     plot_route_in_graph(super_graph, 3744263637, 8067989857)
     
+    #babis
+    nodes, edges = net_ops.get_nodes_edges(super_graph)
+    net_ops.write_nodes_edges_to_disk(nodes, edges, 'supergraph', '../results/')
+    
     #save_acquired_from_file_graphs_to_disk('../data/dimoi_athinas.csv', '../results/graphs/')
     #n = get_network_lvls_scenario('../data/dimoi_athinas.csv',3744263637, 300972555, 'Zografou')
     #k_best_scenario('../results/greece.graphml', 'results.csv', 'osmid')
