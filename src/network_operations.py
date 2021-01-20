@@ -212,7 +212,7 @@ def get_supermarket_location(geometry):
     return -1
 
 
-def create_adj_matrix_of_supermarkets(net_nodes, graph):
+def create_adj_matrix_of_supermarkets(sm_nodes, graph):
     """method to create the adjacency matrix of nodes that represent
     the supermarkets.
 
@@ -224,6 +224,49 @@ def create_adj_matrix_of_supermarkets(net_nodes, graph):
         [type]: [description]
     """
     # get ids of all supermarkets and create pairs
+    adj_matrix = create_empty_adj_matrix(sm_nodes)
     # run a dijkstra between all pairs
+    distances = create_distance_matrix(adj_matrix, graph)
+    pdb.set_trace()
     # return the table
-    return sm_adj_matrix
+    return distances
+
+
+def create_empty_adj_matrix(sm_nodes, col='osmid'):
+    """Method to create a len(col) x len(col) symmetric matrix and to
+    initialize it.
+
+    Args:
+        sm_nodes ([type]): [description]
+        col (str, optional): [description]. Defaults to 'osmid'.
+
+    Returns:
+        [type]: [description]
+    """
+    df = pd.crosstab(sm_nodes[col], sm_nodes[col])
+    idx = df.columns.union(df.index)
+    df = df.reindex(index=idx, columns=idx, fill_value=99999)
+    return df
+
+
+def create_distance_matrix(df, graph):
+    # get all nodes ids to a list.
+    all_nodes = df.columns.to_list()
+    # for each node acquire a list with the distance between it and the other nodes
+    distances = []
+    for node in all_nodes:
+        distance_list = compute_distance_from_other_nodes(node, all_nodes, graph)
+        distances.append(distance_list)
+    return distances
+
+
+def compute_distance_from_other_nodes(node, node_list, graph):
+    dist_list = []
+    for n in node_list:
+        try:
+            dist = nx.shortest_path_length(graph, node, n)
+        except nx.exception.NetworkXNoPath:
+            print("no path between ", node, n)
+            dist = 999999
+        dist_list.append(dist)
+    return dist_list
