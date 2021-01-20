@@ -350,7 +350,8 @@ def supermarkets_vrp_google_scenario(athens_network_path,
     # load supermarkets path
     supermarkets = gpd.read_file(supermarkets_path)
     # project supermarkets nodes in athens network
-    net_sm_nodes = net_ops.get_matched_node_ids(supermarkets, graph)
+    ###### HERE works net_sm_nodes = net_ops.get_matched_node_ids(supermarkets, graph)
+    net_nodes = net_ops.populate_net_nodes_with_sm_nodes(graph, nodes, supermarkets)
     pdb.set_trace()
     # create adjacency matrix with minimum paths ready for google vrp
     # run google vrp
