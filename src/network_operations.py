@@ -83,6 +83,7 @@ def get_nodes_pairs(a_list):
                 all_pairs.append((u, v))
     return all_pairs
 
+
 def update_edge_list(all_pairs_list, edges_list, col_name, cost):
     """ Method to add a value (cost) to each edge in edges_list."""
     for pair in all_pairs_list:
@@ -227,7 +228,6 @@ def create_adj_matrix_of_supermarkets(sm_nodes, graph):
     adj_matrix = create_empty_adj_matrix(sm_nodes)
     # run a dijkstra between all pairs
     distances = create_distance_matrix(adj_matrix, graph)
-    pdb.set_trace()
     # return the table
     return distances
 
@@ -266,7 +266,7 @@ def compute_distance_from_other_nodes(node, node_list, graph):
         try:
             dist = nx.shortest_path_length(graph, node, n)
         except nx.exception.NetworkXNoPath:
-            print("no path between ", node, n)
+            print("no path between %s and %s", node, n)
             dist = 999999
         dist_list.append(dist)
     return dist_list

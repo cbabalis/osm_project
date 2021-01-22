@@ -73,16 +73,6 @@ def _create_pairs_starting_with(key, node_dict):
     values = node_dict[key]
     end_nodes = node_dict.keys()
     for val, end_node in zip(values, end_nodes):
-        pair = (start_node, end_node, val)
+        pair = (int(start_node), int(end_node), float(val))
         pairs.append(pair)
     return pairs
-            
-
-
-def main():
-    u_v = get_u_v_pairs_from_file('../data/tat_4_step_csv.csv')
-    pdb.set_trace()
-
-
-if __name__ == '__main__':
-    main()

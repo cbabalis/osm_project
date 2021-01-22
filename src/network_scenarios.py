@@ -10,6 +10,7 @@ import min_path_ops.dijkstra as dijkstra
 import geopandas as gpd
 from os import listdir  # in need for searching in folders
 from os.path import isfile, join  # in need for searching in folders
+import input_output_operations as io_ops
 import pdb
 
 
@@ -26,11 +27,11 @@ def get_sum_of_two_shortest_paths_edges(graph, edges, start1, end1,
 
 
 def update_edges_list_with_min_path_traffic(graph, edges, start1,
-                                            end1, new_col):
+                                            end1, new_col, val=100):
     try:
         shortest_path = net_ops.get_shortest_path(graph, start1, end1)
         min_path_pairs = net_ops.get_nodes_pairs(shortest_path)
-        net_ops.update_edge_list(min_path_pairs, edges, new_col, 100)
+        net_ops.update_edge_list(min_path_pairs, edges, new_col, val)
     except networkx.exception.NetworkXNoPath:
         print("no path between ", start1, end1)
 
@@ -66,6 +67,25 @@ def simple_scenario_ipynb():
     graph = net_ops.get_network_graph(place_name, net_type, cf)
     nodes, edges = net_ops.get_nodes_edges(graph)
     scenario_two_paths(graph, edges, 3744263637, 300972555, 295512257, 1604968703, 'traffic', 'loaded_edges.csv')
+
+
+def tatiana_scenario(src_graph_fp, csv_src_fp, results_csv_fpath, new_col='traffic'):
+    # get the graph from disk
+    graph = net_ops.load_graph_from_disk(src_graph_fp)
+    nodes, edges = net_ops.get_nodes_edges(graph)
+    # read the csv file (form: n1, n2, n3, ...n)
+    # create pairs from csv file
+    pairs = io_ops.get_u_v_pairs_from_file(csv_src_fp)
+    # compute minimum paths and update traffic
+    net_ops.add_new_column_to_dataframe(edges, new_col)
+    for pair in pairs:
+        u, v, traffic = pair
+        if u is not v:
+            update_edges_list_with_min_path_traffic(graph, edges, u,
+                                            v, new_col, traffic)
+    pdb.set_trace()
+    write_traffic_edges_to_csv(edges, results_csv_fpath)
+    pdb.set_trace()
 
 
 def scenario_all_nodes_with_all(pairs_list, graph, edges, new_col,
@@ -353,18 +373,19 @@ def supermarkets_vrp_google_scenario(athens_network_path,
     ###### HERE works net_sm_nodes = net_ops.get_matched_node_ids(supermarkets, graph)
     net_nodes = net_ops.populate_net_nodes_with_sm_nodes(graph, nodes, supermarkets)
     sm_nodes = net_nodes[net_nodes['supermarket_id'] != 0]
+    #sm_nodes = sm_nodes[1:60]
     dist_matrix = net_ops.create_adj_matrix_of_supermarkets(sm_nodes, graph)
-    pdb.set_trace()
+    return dist_matrix
     # create adjacency matrix with minimum paths ready for google vrp
     # run google vrp
     # get results
-    pass
 
 
 def main():
-    supermarkets_vrp_google_scenario('../results/attica_graph.graphml',
-                                     '../data/supermarkets-attica.geojson',
-                                     '../results/')
+    tatiana_scenario('../results/tat_graph.graphml', '../data/tat_4_step_csv.csv', '../results/tatiana_loads.csv')
+    #supermarkets_vrp_google_scenario('../results/attica_graph.graphml',
+    #                                 '../data/supermarkets-attica.geojson',
+    #                                 '../results/')
     # run_tavros_scenario()
     #save_acquired_from_file_graphs_to_disk('../data/dimoi_athinas.csv', '../results/graphs/')
     #n = get_network_lvls_scenario('../data/dimoi_athinas.csv',3744263637, 300972555, 'Zografou')
