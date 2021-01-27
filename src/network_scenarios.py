@@ -43,7 +43,7 @@ def split_list_ids_to_single_rows(edges):
 
 
 def write_traffic_edges_to_csv(edges, results_csv_fpath):
-    traffic_edges = edges[edges['traffic']>99]
+    traffic_edges = edges[edges['traffic']>0.1]
     single_id_rows_to_df = split_list_ids_to_single_rows(traffic_edges)
     single_id_rows_to_df.to_csv(results_csv_fpath)
     
@@ -382,11 +382,11 @@ def supermarkets_vrp_google_scenario(athens_network_path,
 
 
 def main():
-    tatiana_scenario('../results/tat_graph.graphml', '../data/tat_4_step_csv.csv', '../results/tatiana_loads.csv')
+    tatiana_scenario('../results/prim_sec_graph.graphml', '../data/tat_4_step_csv.csv', '../results/giorgos_traffic.csv')
     #supermarkets_vrp_google_scenario('../results/attica_graph.graphml',
     #                                 '../data/supermarkets-attica.geojson',
     #                                 '../results/')
-    # run_tavros_scenario()
+    #run_tavros_scenario()
     #save_acquired_from_file_graphs_to_disk('../data/dimoi_athinas.csv', '../results/graphs/')
     #n = get_network_lvls_scenario('../data/dimoi_athinas.csv',3744263637, 300972555, 'Zografou')
     #k_best_scenario('../results/greece.graphml', 'results.csv', 'osmid')
