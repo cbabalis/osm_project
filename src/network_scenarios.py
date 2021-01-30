@@ -382,7 +382,8 @@ def supermarkets_vrp_google_scenario(athens_network_path,
 
 
 def main():
-    tatiana_scenario('../results/prim_sec_graph.graphml', '../data/tat_4_step_csv.csv', '../results/giorgos_traffic.csv')
+    tatiana_scenario('../results/giorgos_regional_graph-cf.graphml', '../data/16_regions.csv', '../results/giorgos_traffic.csv')
+    #tatiana_scenario('../results/prim_sec_graph.graphml', '../data/tat_4_step_csv.csv', '../results/giorgos_traffic.csv')
     #supermarkets_vrp_google_scenario('../results/attica_graph.graphml',
     #                                 '../data/supermarkets-attica.geojson',
     #                                 '../results/')
