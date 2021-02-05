@@ -270,3 +270,38 @@ def compute_distance_from_other_nodes(node, node_list, graph):
             dist = 999999
         dist_list.append(dist)
     return dist_list
+
+
+def add_u_v_coords_to_edges(nodes, edges):
+    """
+
+    Args:
+        nodes ([type]): [description]
+        edges ([type]): [description]
+    """
+    # populate edges with coordinate fields
+    coord_fields = ['u_x', 'u_y', 'v_x', 'v_y']
+    _populate_edges_with_new_fields(edges, coord_fields)
+    # for each edge get u, v nodes
+    pdb.set_trace() # TODO too much code needs to be written!
+    for edge in edges.iterrows():
+        # for each node get its coordinates and add them to the current edge
+        u = edge['u']
+        populate_edge(u, edge, x='u_x', y='u_y')
+        v = edge['v']
+        populate_edge(v, edge, x='v_x', y='v_y')
+
+
+def _populate_edges_with_new_fields(edges, coord_fields):
+    for field in coord_fields:
+        if field not in edges.columns:
+            edges[field] = None
+
+
+def populate_edge(node, edge, x, y):
+    n_x = node.X
+    n_y = node.Y
+    edge[x] = n_x
+    edge[y] = n_y
+            
+    
