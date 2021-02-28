@@ -273,7 +273,7 @@ def compute_distance_from_other_nodes(node, node_list, graph):
 
 
 def add_u_v_coords_to_edges(nodes, edges):
-    """
+    """ #TODO maybe this and the following methods need to be removed. check
 
     Args:
         nodes ([type]): [description]
@@ -303,5 +303,3 @@ def populate_edge(node, edge, x, y):
     n_y = node.Y
     edge[x] = n_x
     edge[y] = n_y
-            
-    
