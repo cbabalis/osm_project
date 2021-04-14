@@ -95,6 +95,7 @@ def convert_csv_to_nodes(csv_filepath, src_graph_filepath, cols=['latitude', 'lo
     osm_nodes_with_coords = osm_raw_data_nodes[['latitude', 'longitude', '@id', 'brand']]
     if '@id' in osm_nodes_with_coords.columns:
         osm_nodes_with_coords.rename(columns={'@id':'node_id'}, inplace=True)
+    osm_nodes_with_coords = _process_raw_osm_id(osm_nodes_with_coords)
     # return the new dataframe
     pdb.set_trace()
     return osm_nodes_with_coords
@@ -110,4 +111,6 @@ def _process_raw_osm_id(df, id_col='node_id'):
     returns:
         df (dataframe): the updated dataframe
     """
-    pass
+    df[id_col] = df[id_col].str.replace("way/", "")
+    df[id_col] = df[id_col].str.replace("node/", "")
+    return df
