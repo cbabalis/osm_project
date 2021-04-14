@@ -76,3 +76,38 @@ def _create_pairs_starting_with(key, node_dict):
         pair = (int(start_node), int(end_node), float(val))
         pairs.append(pair)
     return pairs
+
+
+def convert_csv_to_nodes(csv_filepath, src_graph_filepath, cols=['latitude', 'longitude', '@id', 'brand']):
+    """Method to convert a csv file (from OSM) to nodes that are able to be
+    integrated to nodes of a road network.
+
+    Args:
+        csv_filepath (str): The path in the disk where the csv file is found.
+        src_graph_filepath (str): The path where the network graph is found.
+    
+    return:
+        nodes_list (list): A list of nodes with information to be integrated in a road network.
+    """
+    # read the raw file from disk
+    osm_raw_data_nodes = pd.read_csv(csv_filepath, delimiter='\t')
+    # get only the columns needed and rename them (if necessary) to a new dataframe
+    osm_nodes_with_coords = osm_raw_data_nodes[['latitude', 'longitude', '@id', 'brand']]
+    if '@id' in osm_nodes_with_coords.columns:
+        osm_nodes_with_coords.rename(columns={'@id':'node_id'}, inplace=True)
+    # return the new dataframe
+    pdb.set_trace()
+    return osm_nodes_with_coords
+
+
+def _process_raw_osm_id(df, id_col='node_id'):
+    """Method to process the raw osm id and to return just a numeric id.
+
+    Args:
+        df (dataframe): pandas dataframe that contains all the nodes of interest.
+        id_col (str, optional): name of the column where ID is found. Default is 'node_id'
+    
+    returns:
+        df (dataframe): the updated dataframe
+    """
+    pass
