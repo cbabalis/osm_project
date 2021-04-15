@@ -100,7 +100,6 @@ def convert_csv_to_nodes(csv_filepath, src_graph_filepath, cols=['latitude', 'lo
     # create a new column with coordinates ready to be inserted to the graph
     osm_nodes_with_coords = _create_coord_column(osm_nodes_with_coords)
     # return the new dataframe
-    pdb.set_trace()
     return osm_nodes_with_coords
 
 
