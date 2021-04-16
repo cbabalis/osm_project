@@ -26,7 +26,7 @@ def assign_POIs_to_graph(graph, pois_df):
     return poi_nodes
 
 
-def _get_pois_coords_list(df, col='coords'):
+def _get_pois_coords_list(df, col='coordinates'):
     """Method to retrieve points of interest from a dataframe,
     to convert them to tuple containing (lat, lon) pairs and
     to return a list full of tuples
@@ -66,7 +66,7 @@ def main():
     # read input (file with custom data and network)
     # match custom input to network
     # add traffic to edges that connect nodes of custom input
-    pass
+    flora('results/greece-athens.graphml', 'data/supermarkets.csv', '')
 
 
 if __name__ == '__main__':

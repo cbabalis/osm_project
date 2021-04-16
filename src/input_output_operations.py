@@ -78,14 +78,13 @@ def _create_pairs_starting_with(key, node_dict):
     return pairs
 
 
-def convert_csv_to_nodes(csv_filepath, src_graph_filepath, cols=['latitude', 'longitude', '@id', 'brand']):
+def convert_csv_to_nodes(csv_filepath, cols=['latitude', 'longitude', '@id', 'brand']):
     """Method to convert a csv file (from OSM) to nodes that are able to be
     integrated to nodes of a road network.
 
     Args:
         csv_filepath (str): The path in the disk where the csv file is found.
-        src_graph_filepath (str): The path where the network graph is found.
-    
+        
     return:
         nodes_list (list): A list of nodes with information to be integrated in a road network.
     """
@@ -119,5 +118,5 @@ def _process_raw_osm_id(df, id_col='node_id'):
 
 
 def _create_coord_column(df, coord_col='coordinates', lat='latitude', lon='longitude'):
-    df[coord_col] = df[lat].str.cat(df[lon].astype(str), sep=",")
+    df[coord_col] = df[lat].apply(str).str.cat(df[lon].astype(str), sep=",")
     return df
