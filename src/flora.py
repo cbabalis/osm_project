@@ -3,6 +3,7 @@
 
 import pandas as pd
 import osmnx as ox
+import networkx as nx
 import input_output_operations as io_ops
 import network_operations as net_ops
 import network_scenarios as net_scens
@@ -52,13 +53,60 @@ def _get_pois_coords_list(df, col='coordinates'):
     return coords_list
 
 
+def enhance_network_nodes_with_field(nodes, poi_nodes_list, new_field, field_name):
+    """Method to add new fields to the nodes of the network.
+    It adds the points of interest as well as loads to them.
+
+    Args:
+        nodes (DataFrame): Nodes of the network (road network)
+        poi_nodes_list (list): List of nodes IDs that contain points of interest
+    """
+    net_ops.add_new_column_to_dataframe(nodes, name=new_field)
+    for poi in poi_nodes_list:
+        nodes[new_field][nodes['osmid'] == poi] = field_name
+
+
+def create_distance_matrix(graph, pois_list):
+    """Method to create a distance matrix from a dataframe of nodes and
+    to return it in compliance with google OR-Tools.
+    ref: https://developers.google.com/optimization/routing/vrp
+
+    Args:
+        graph (Graph): graphml representation of the graph
+        pois_list (list): list of ids of points of interest
+    """
+    # create an empty dictionary for the distance matrix
+    data = create_data_model()
+    # populate distance matrix by computing distances from each node to each other
+    for start_node in pois_list:
+        curr_row = net_ops.compute_distance_from_other_nodes(start_node, pois_list, graph)
+        data['distance_matrix'].append(curr_row)
+    #     current_row = []
+    #     for end_node in pois_list:
+    #         current_row.append(nx.shortest_path(graph, start_node, end_node))
+    #     data['distance_matrix'].append(current_row)
+    # # return the new data structure
+    return data
+
+
+def create_data_model():
+    data = {}
+    data['distance_matrix'] = []
+    data['num_vehicles'] = 4
+    data['depot'] = 0
+    return data
+
+
 def flora(src_graph_fp, csv_src_fp, results_csv_fpath, new_col='traffic'):
     # get the graph from disk
     graph = net_ops.load_graph_from_disk(src_graph_fp)
     nodes, edges = net_ops.get_nodes_edges(graph)
     # read the points of interest to df
     pois_df = io_ops.convert_csv_to_nodes(csv_src_fp)
-    assign_POIs_to_graph(graph, pois_df)
+    poi_nodes = assign_POIs_to_graph(graph, pois_df)
+    # assign new fields and values to nodes of the network
+    enhance_network_nodes_with_field(nodes, poi_nodes, new_field='supermarkets', field_name='AB')
+    data = create_distance_matrix(graph, poi_nodes)
     pdb.set_trace()
 
 
