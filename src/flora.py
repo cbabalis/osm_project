@@ -24,6 +24,9 @@ def assign_POIs_to_graph(graph, pois_df):
     poi_nodes = []
     for poi in pois_coords:
         poi_nodes.append(ox.get_nearest_node(graph, poi))
+    print(len(poi_nodes))
+    poi_nodes = _unique(poi_nodes)
+    print("unique are " , len(poi_nodes))
     return poi_nodes
 
 
@@ -53,6 +56,14 @@ def _get_pois_coords_list(df, col='coordinates'):
     return coords_list
 
 
+def _unique(li):
+    unique_li = []
+    for elem in li:
+        if elem not in unique_li:
+            unique_li.append(elem)
+    return unique_li
+
+
 def enhance_network_nodes_with_field(nodes, poi_nodes_list, new_field, field_name):
     """Method to add new fields to the nodes of the network.
     It adds the points of interest as well as loads to them.
@@ -78,14 +89,10 @@ def create_distance_matrix(graph, pois_list):
     # create an empty dictionary for the distance matrix
     data = create_data_model()
     # populate distance matrix by computing distances from each node to each other
+    pois_list = net_ops.fast_check_network_integrity(pois_list, graph)
     for start_node in pois_list:
         curr_row = net_ops.compute_distance_from_other_nodes(start_node, pois_list, graph)
         data['distance_matrix'].append(curr_row)
-    #     current_row = []
-    #     for end_node in pois_list:
-    #         current_row.append(nx.shortest_path(graph, start_node, end_node))
-    #     data['distance_matrix'].append(current_row)
-    # # return the new data structure
     return data
 
 
@@ -106,8 +113,9 @@ def flora(src_graph_fp, csv_src_fp, results_csv_fpath, new_col='traffic'):
     poi_nodes = assign_POIs_to_graph(graph, pois_df)
     # assign new fields and values to nodes of the network
     enhance_network_nodes_with_field(nodes, poi_nodes, new_field='supermarkets', field_name='AB')
+    # create distance matrix
     data = create_distance_matrix(graph, poi_nodes)
-    pdb.set_trace()
+    return data
 
 
 def main():
