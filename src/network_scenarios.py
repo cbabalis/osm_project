@@ -42,8 +42,9 @@ def split_list_ids_to_single_rows(edges):
     return single_id_rows_to_df
 
 
-def write_traffic_edges_to_csv(edges, results_csv_fpath):
-    traffic_edges = edges[edges['traffic']>0.1]
+def write_traffic_edges_to_csv(edges, results_csv_fpath,
+                               col_name='traffic', threshold=0.1):
+    traffic_edges = edges[edges[col_name] > threshold]
     single_id_rows_to_df = split_list_ids_to_single_rows(traffic_edges)
     single_id_rows_to_df.to_csv(results_csv_fpath)
     
@@ -84,7 +85,8 @@ def tatiana_scenario(src_graph_fp, csv_src_fp, results_csv_fpath, new_col='traff
             update_edges_list_with_min_path_traffic(graph, edges, u,
                                             v, new_col, traffic)
     pdb.set_trace()
-    write_traffic_edges_to_csv(edges, results_csv_fpath)
+    #net_ops.add_u_v_coords_to_edges(nodes, edges)
+    write_traffic_edges_to_csv(edges, results_csv_fpath, new_col, threshold=0.1)
     pdb.set_trace()
 
 
@@ -121,7 +123,7 @@ def scenario_all_in_all(src_graph_fp, csv_src_fp, results_csv_fpath, node):
     graph = net_ops.load_graph_from_disk(src_graph_fp)
     nodes, edges = net_ops.get_nodes_edges(graph)
     scenario_all_nodes_with_all(combo_list, graph, edges, 'traffic', results_csv_fpath)
-    write_traffic_edges_to_csv(edges, results_csv_fpath)
+    write_traffic_edges_to_csv(edges, results_csv_fpath, new_col='traffic', threshold=0.1)
 
 
 def custom_dijkstra(src_graph_fp, results_folder, origin_node, dest_node):
@@ -382,7 +384,8 @@ def supermarkets_vrp_google_scenario(athens_network_path,
 
 
 def main():
-    tatiana_scenario('../results/giorgos_regional_graph-cf.graphml', '../data/16_regions.csv', '../results/giorgos_traffic.csv')
+    tatiana_scenario('../results/creta_graph-secondary.graphml', '../data/creta.csv', '../results/giorgos_traffic-cf.csv')
+    #tatiana_scenario('../results/giorgos_regional_graph-cf.graphml', '../data/16_regions.csv', '../results/giorgos_traffic-cf.csv')
     #tatiana_scenario('../results/prim_sec_graph.graphml', '../data/tat_4_step_csv.csv', '../results/giorgos_traffic.csv')
     #supermarkets_vrp_google_scenario('../results/attica_graph.graphml',
     #                                 '../data/supermarkets-attica.geojson',
@@ -391,8 +394,7 @@ def main():
     #save_acquired_from_file_graphs_to_disk('../data/dimoi_athinas.csv', '../results/graphs/')
     #n = get_network_lvls_scenario('../data/dimoi_athinas.csv',3744263637, 300972555, 'Zografou')
     #k_best_scenario('../results/greece.graphml', 'results.csv', 'osmid')
-    #custom_dijkstra_all_vs_all('../results/greece.graphml', '../data/POINTS_NUTS3_MAINLAND3.csv', 'skat', 'node_id')
-    #custom_dijkstra('../results/greece.graphml', 'results.csv', 'osmid',)
+    #custom_dijkstra_all_vs_all('../results/gr', 'results.csv', 'osmid',)
     #scenario_all_in_all('../results/greece.graphml', '../data/POINTS_NUTS3_MAINLAND3.csv', '../results/POINTS_NUTS3_MAINLAND3_RESULTS.csv', 'node_id')
     #simple_scenario_ipynb()
 

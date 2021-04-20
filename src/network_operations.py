@@ -252,6 +252,8 @@ def create_empty_adj_matrix(sm_nodes, col='osmid'):
 def create_distance_matrix(df, graph):
     # get all nodes ids to a list.
     all_nodes = df.columns.to_list()
+    # check if all nodes of interest in network have path that connects them
+    all_nodes = fast_check_network_integrity(all_nodes, graph, threshold=10)
     # for each node acquire a list with the distance between it and the other nodes
     distances = []
     for node in all_nodes:
@@ -262,14 +264,69 @@ def create_distance_matrix(df, graph):
 
 def compute_distance_from_other_nodes(node, node_list, graph):
     dist_list = []
+    no_pairs_dict = {}
+    no_pairs_list = []
+    no_conns_found = 0
     for n in node_list:
         try:
             dist = nx.shortest_path_length(graph, node, n)
         except nx.exception.NetworkXNoPath:
-            print("no path between %s and %s", node, n)
+            #print("no path between %s and %s", node, n)
             dist = 999999
+            no_conns_found += 1
+            no_pairs_list.append(n)
         dist_list.append(dist)
+    if no_conns_found:
+        print("connections not found: ", no_conns_found, " out of ", len(node_list))
+        no_pairs_dict[node] = no_pairs_list
+        print("connections not found between", no_pairs_dict)
     return dist_list
+
+
+def fast_check_network_integrity(node_list, graph, threshold=17):
+    """Method to check in a fast, sloppy way if there is path from any point of the network to any other.
+    Return a list of the nodes that exist paths connecting them
+
+    Args:
+        node_list (list): List of node ids.
+        graph (graphml): graph of the network
+    """
+    connected_list = []
+    no_conns_found = 0
+    # iterate each node to each other
+    # if there is no connection between two nodes,
+    # if not connected nodes are less than threshold, then remove the not connected nodes
+    # from the list.
+    lonely_nodes = []
+    for start_node in node_list:
+        no_connected_list = []
+        for end_node in node_list:
+            try:
+                dist = nx.shortest_path_length(graph, start_node, end_node)
+            except nx.exception.NetworkXNoPath:
+                no_conns_found += 1
+                no_connected_list.append(end_node)
+        if len(no_connected_list) > 0:
+            if len(no_connected_list) < threshold:
+                node_list = [x for x in node_list if x not in no_connected_list]
+            else:
+                lonely_nodes.append(start_node)
+    _remove_nodes_from_list(lonely_nodes, node_list)
+    return node_list
+    
+
+def _remove_nodes_from_list(list_to_remove, nodes_list):
+    """[summary]
+
+    Args:
+        list_to_remove ([type]): [description]
+        nodes_list ([type]): [description]
+    """
+    for elem in list_to_remove:
+        if elem in nodes_list:
+            nodes_list.remove(elem)
+        else:
+            print("elem not in list: ", elem)
 
 
 def add_u_v_coords_to_edges(nodes, edges):
