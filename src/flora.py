@@ -88,12 +88,15 @@ def create_distance_matrix(graph, pois_list):
     """
     # create an empty dictionary for the distance matrix
     data = create_data_model()
+    # create a list of nodes that correspond to distance matrix rows.
+    dist_matrix_nodes_dict = {}
     # populate distance matrix by computing distances from each node to each other
     pois_list = net_ops.fast_check_network_integrity(pois_list, graph)
     for start_node in pois_list:
         curr_row = net_ops.compute_distance_from_other_nodes(start_node, pois_list, graph)
         data['distance_matrix'].append(curr_row)
-    return data
+        dist_matrix_nodes_dict[start_node] = curr_row
+    return (data, dist_matrix_nodes_dict)
 
 
 def create_data_model():
@@ -114,7 +117,7 @@ def flora(src_graph_fp, csv_src_fp, results_csv_fpath, new_col='traffic'):
     # assign new fields and values to nodes of the network
     enhance_network_nodes_with_field(nodes, poi_nodes, new_field='supermarkets', field_name='AB')
     # create distance matrix
-    data = create_distance_matrix(graph, poi_nodes)
+    data, dist_matrix_nodes_dict = create_distance_matrix(graph, poi_nodes)
     return data
 
 
