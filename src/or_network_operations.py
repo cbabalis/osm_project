@@ -17,6 +17,18 @@ def create_data_model():
     return data
 
 
+def convert_list_data_to_ints(a_list):
+    """ Method to get a list of floats and to return them as ints.
+
+    Args:
+        a_list (list): list of floats
+    return:
+        list of ints
+    """
+    int_list = [[int(float(j)) for j in i] for i in a_list]
+    return int_list
+
+
 def print_solution(data, manager, routing, solution):
     """Prints solution on console."""
     max_route_distance = 0
@@ -44,6 +56,7 @@ def main():
     data = create_data_model()
     od_result = net_ops.compute_distance_matrix('data/supermarkets.csv')
     data['distance_matrix'] = od_result[0].values.tolist()
+    data['distance_matrix'] = convert_list_data_to_ints(data['distance_matrix'])
     pdb.set_trace()
 
     # Create the routing index manager.
