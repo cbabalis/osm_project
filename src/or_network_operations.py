@@ -5,6 +5,16 @@ https://developers.google.com/optimization/routing/vrp"""
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 import flora
+import network_operations as net_ops
+import pdb
+
+
+def create_data_model():
+    data = {}
+    data['distance_matrix'] = []
+    data['num_vehicles'] = 40
+    data['depot'] = 0
+    return data
 
 
 def print_solution(data, manager, routing, solution):
@@ -30,7 +40,11 @@ def print_solution(data, manager, routing, solution):
 def main():
     """Solve the CVRP problem."""
     # Instantiate the data problem.
-    data = flora.flora('results/graphs/attica-graph.graphml', 'data/supermarkets.csv', '') #create_data_model()
+    #data = flora.flora('results/graphs/attica-graph.graphml', 'data/supermarkets.csv', '') #create_data_model()
+    data = create_data_model()
+    od_result = net_ops.compute_distance_matrix('data/supermarkets.csv')
+    data['distance_matrix'] = od_result[0].values.tolist()
+    pdb.set_trace()
 
     # Create the routing index manager.
     manager = pywrapcp.RoutingIndexManager(len(data['distance_matrix']),
@@ -58,7 +72,7 @@ def main():
     routing.AddDimension(
         transit_callback_index,
         0,  # no slack
-        30000,  # vehicle maximum travel distance
+        3000,  # vehicle maximum travel distance
         True,  # start cumul to zero
         dimension_name)
     distance_dimension = routing.GetDimensionOrDie(dimension_name)

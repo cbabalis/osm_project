@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 from ipyleaflet import *
 from shapely.geometry import LineString, mapping
+import osrm
 
 # debugger. Comment/uncomment depending on case.
 import pdb
@@ -327,6 +328,28 @@ def _remove_nodes_from_list(list_to_remove, nodes_list):
             nodes_list.remove(elem)
         else:
             print("elem not in list: ", elem)
+
+
+def compute_distance_matrix(csv_nodes_path, titles='', annotations='distance'):
+    """ Method to compute and return distance matrix given a set of nodes of interest
+
+    Args:
+        csv_nodes_path (str]): Path to a csv containing info about nodes.
+        titles (str, optional): Titles of the od matrix to be produced. Defaults to ''.
+        annotations (str, optional): distance or time. Defaults to 'distance'.
+    """
+    supermarkets = pd.read_csv(csv_nodes_path, delimiter='\t')
+    coords = [','.join(str(x) for x in y) for y in map(tuple, supermarkets[['latitude', 'longitude']].values)]
+    numerical_coords = []
+    for elem in coords:
+        long_lat_elems = elem.split(',')
+        numerical_coords.append((float(long_lat_elems[1]), float(long_lat_elems[0])))
+    # create titles
+    if not titles or len(titles) != len(numerical_coords):
+        titles = [i for i in range(len(numerical_coords))]
+    # compute distance matrix and return it
+    dist_od = osrm.table(numerical_coords, ids_origin=titles, output='pandas', annotations=annotations)
+    return dist_od
 
 
 def add_u_v_coords_to_edges(nodes, edges):
