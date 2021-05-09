@@ -12,7 +12,7 @@ import pdb
 def create_data_model():
     data = {}
     data['distance_matrix'] = []
-    data['num_vehicles'] = 40
+    data['num_vehicles'] = 4
     data['depot'] = 0
     return data
 
@@ -32,6 +32,7 @@ def convert_list_data_to_ints(a_list):
 def print_solution(data, manager, routing, solution):
     """Prints solution on console."""
     max_route_distance = 0
+    written_result = ''
     for vehicle_id in range(data['num_vehicles']):
         index = routing.Start(vehicle_id)
         plan_output = 'Route for vehicle {}:\n'.format(vehicle_id)
@@ -42,11 +43,13 @@ def print_solution(data, manager, routing, solution):
             index = solution.Value(routing.NextVar(index))
             route_distance += routing.GetArcCostForVehicle(
                 previous_index, index, vehicle_id)
+        written_result += plan_output
         plan_output += '{}\n'.format(manager.IndexToNode(index))
         plan_output += 'Distance of the route: {}m\n'.format(route_distance)
         print(plan_output)
         max_route_distance = max(route_distance, max_route_distance)
     print('Maximum of the route distances: {}m'.format(max_route_distance))
+    return written_result
 
 
 def main():
@@ -54,10 +57,9 @@ def main():
     # Instantiate the data problem.
     #data = flora.flora('results/graphs/attica-graph.graphml', 'data/supermarkets.csv', '') #create_data_model()
     data = create_data_model()
-    od_result = net_ops.compute_distance_matrix('data/supermarkets.csv')
+    od_result = net_ops.compute_distance_matrix('data/sklavenitis.csv')
     data['distance_matrix'] = od_result[0].values.tolist()
     data['distance_matrix'] = convert_list_data_to_ints(data['distance_matrix'])
-    pdb.set_trace()
 
     # Create the routing index manager.
     manager = pywrapcp.RoutingIndexManager(len(data['distance_matrix']),
@@ -85,7 +87,7 @@ def main():
     routing.AddDimension(
         transit_callback_index,
         0,  # no slack
-        3000,  # vehicle maximum travel distance
+        30000000,  # vehicle maximum travel distance
         True,  # start cumul to zero
         dimension_name)
     distance_dimension = routing.GetDimensionOrDie(dimension_name)
@@ -100,8 +102,12 @@ def main():
     solution = routing.SolveWithParameters(search_parameters)
 
     # Print solution on console.
+    written_solution = ''
+    or_result = 'results/or_results.txt'
     if solution:
-        print_solution(data, manager, routing, solution)
+        written_solution = print_solution(data, manager, routing, solution)
+        with open(or_result, 'w') as f:
+            f.write(written_solution)
 
 
 if __name__ == '__main__':

@@ -102,6 +102,72 @@ def convert_csv_to_nodes(csv_filepath, cols=['latitude', 'longitude', '@id', 'br
     return osm_nodes_with_coords
 
 
+def get_routes_from_textfile(txtfilepath):
+    """Method to read a file in the disk and to convert its data to a dictionary
+    of <vehicle: list of ids> pairs.
+
+    Args:
+        txtfilepath (str): Path where the text file is found on disk.
+    
+    return:
+        a dictionary
+    """
+    routes_dict = {}
+    # read the file contents
+    file_contents = ''
+    with open(txtfilepath, 'r') as f:
+        file_contents = f.read()
+    # split the contents to the vehicles accordingly
+    text_routes_list = _convert_text_to_routes_text_list(file_contents)
+    pdb.set_trace()
+    # split the nodes for each vehicle
+
+
+def _convert_text_to_routes_text_list(text_contents):
+    """Method to split raw text to data corresponding to routes and
+    to return a list of nodes
+
+    Args:
+        text_contents (str): contents of a file (raw)
+    """
+    routes_dict = {}
+    route_id = 0
+    # remove all spaces
+    text_contents = text_contents.replace(" ", "")
+    # split text to route chunks
+    routes_text = text_contents.split("\n")    
+    # remove all inappropriate text (first entry)
+    del routes_text[0]
+    for route in routes_text:
+        # fill results dictionary with corresponding nodes in list form
+        route_nodes = route.split("->")
+        route_nodes = _refine_route_nodes(route_nodes)
+        routes_dict[route_id] = route_nodes
+        route_id += 1
+    return routes_dict
+
+
+def _refine_route_nodes(route_nodes):
+    """Method to remove any "Route for vehicle... text and
+    to convert string to integer.
+
+    Args:
+        route_nodes (list): list of nodes
+
+    Returns:
+        [list]: list of integer nodes
+    """
+    refined_routes = []
+    # remove all text not necessary
+    for route in route_nodes:
+        if route.startswith("Route"):
+            print("Node is not going to be included: ", route)
+        elif route:
+            # make nodes int and return them
+            refined_routes.append(int(route))
+    return refined_routes
+
+
 def _process_raw_osm_id(df, id_col='node_id'):
     """Method to process the raw osm id and to return just a numeric id.
 
