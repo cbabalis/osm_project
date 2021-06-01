@@ -209,9 +209,9 @@ def show_stats_in_map(stats_fpath, stat_to_show=''):
     # update the geopandas data getting rid of zeros, None values
     gdf[stat_to_show] = gdf[stat_to_show].fillna(0)
     gdf[stat_to_show] = pd.to_numeric(gdf[stat_to_show])
+    pdb.set_trace()
     gdf = gdf[gdf[stat_to_show] > 0]
     # load to map and print
-    pdb.set_trace()
     print_gdf_to_map(gdf, stat_to_show)
 
 
@@ -228,6 +228,7 @@ def print_gdf_to_map(gdf, stat_to_show):
                                color=stat_to_show,
                                center={"lat": 30.5517, "lon": 23.7073},
                                mapbox_style="open-street-map",
+                               opacity=0.35,
                                zoom=5)
     fig.show()
 
