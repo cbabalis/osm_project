@@ -7,7 +7,9 @@ import shapely.geometry
 from shapely.geometry import shape
 from shapely import wkt
 import numpy as np
+import osmnx as ox
 import wget
+import network_operations as net_ops
 import pdb
 
 
@@ -21,7 +23,7 @@ def create_map_view(df):
         mode = 'markers', #"markers+lines",
         lon = df['longitude'].tolist(), #[23.7412804,23.7483916,23.7551121],
         lat = df['latitude'].tolist(), #[38.0331949,38.0347879,38.0380574],
-        marker = {'size': 20}))
+        marker = {'size': 30}))
 
     fig.add_trace(go.Scattermapbox(
         mode = "markers+lines",
@@ -233,10 +235,56 @@ def print_gdf_to_map(gdf, stat_to_show):
     fig.show()
 
 
+def od_viewer_to_map(csv_file, graph_file, lonlat_centres_file):
+    """Method to view data of an OD-Matrix to a map.
+
+    Args:
+        csv_file ([type]): [description]
+        graph_file ([type]): [description]
+    """
+    # load graph and data with loads for cities from csv_file
+    df = read_data_from_file(csv_file, ',')
+    net_graph = net_ops.load_graph_from_disk(graph_file)
+    # assign cities to graph nodes
+    reg_units_df = read_data_from_file(lonlat_centres_file, ',')
+    _assign_net_node_to_reg_unit(reg_units_df, net_graph)
+    pdb.set_trace()
+    # compute min path between cities in the network
+    # load edges of network with the corresponding loads
+    # return loaded edges
+    # load loaded edges to map
+
+
+def _assign_net_node_to_reg_unit(df, net_graph):
+    # create a new column to df with node ids
+    df['Node ID'] = np.nan
+    # get longitude and latitude values to respective lists
+    lat_list = df['lat']
+    lon_list = df['lon']
+    # create lat, lon pairs
+    coords_list = []
+    for lat, lon in zip(lat_list, lon_list):
+        coords = (lat, lon)
+        coords_list.append(coords)
+    # get the nearest node to the lat, lon pair
+    node_id_list = []
+    for coords in coords_list:
+        lat, lon = coords
+        node_id = ox.get_nearest_node(net_graph, (lat,lon), method='haversine') #, return_dist=True)
+        node_id_list.append(node_id)
+    # assign it to a new list and then add it to the new column
+    df['Node ID'] = node_id_list
+
+
 def main():
-    show_stats_in_map('/home/blaxeep/workspace/osm_project/data/regional_units_dataset_osm/13_regional_units.geojson', stat_to_show='population')
+    #show_stats_in_map('/home/blaxeep/workspace/osm_project/data/regional_units_dataset_osm/13_regional_units.geojson', stat_to_show='population')
     #first_method()
-    #second_method()
+    #second_method() # it has the network road
+    root_dir = '/home/blaxeep/workspace/osm_project/data/viewer_data/'
+    graph_src = root_dir + 'greece-graph.graphml'
+    od_src = root_dir + 'od_matrix.csv'
+    reg_src = root_dir + 'reg_units_coords.csv'
+    od_viewer_to_map(od_src, graph_src, reg_src)
 
 
 if __name__ == '__main__':
