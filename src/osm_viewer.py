@@ -144,11 +144,11 @@ def view_edges_network(edges):
     
     colors = map_traffic_to_color(thickness)
     colors = np.array(colors)
-    pdb.set_trace()
 
     fig = px.line_geo(lat=lats, lon=lons) #, hover_name=names)
     fig.add_trace(go.Scattermapbox(
-        mode = "markers+lines",
+        #mode = "markers+lines",
+        mode = "lines",
         lon = [-50, -60,40],
         lat = [30, 10, -20],
         marker = {'size': 10}))
@@ -162,7 +162,7 @@ def view_edges_network(edges):
                 colorscale=[[0, 'green'],
                             [1, 'red']],
                 cmin=0,
-                cmax=10000),
+                cmax=2000),
             line={'color':'red'},
         )
     )
@@ -213,7 +213,6 @@ def show_stats_in_map(stats_fpath, stat_to_show=''):
     # update the geopandas data getting rid of zeros, None values
     gdf[stat_to_show] = gdf[stat_to_show].fillna(0)
     gdf[stat_to_show] = pd.to_numeric(gdf[stat_to_show])
-    pdb.set_trace()
     gdf = gdf[gdf[stat_to_show] > 0]
     # load to map and print
     print_gdf_to_map(gdf, stat_to_show)
@@ -254,8 +253,8 @@ def od_viewer_to_map(csv_file, graph_file, lonlat_centres_file):
     # replace names of regional units with node ids.
     df = _replace_od_columns_with_node_ids(df, reg_units_df)
     # compute min path between cities in the network
-    node_pairs = net_ops.get_nodes_pairs(node_id_list)
-    nodes_pairs_list = create_nodes_pairs(node_id_list)
+    #nodes_pairs_list = create_nodes_pairs(node_id_list)
+    nodes_pairs_list = extract_node_pairs_from_od(df)
     # load edges of network with the corresponding loads
     _update_edges_with_loads(net_graph, edges, nodes_pairs_list)
     # return loaded edges
@@ -309,6 +308,30 @@ def create_nodes_pairs(node_id_list):
     return combo_list
 
 
+def extract_node_pairs_from_od(od_df):
+    """Method to extract node pairs from an od matrix.
+    
+    This method gets all possible combinations of an od matrix
+    assigning to each pair the cost of the transfer between them.
+
+    Args:
+        od_df (Dataframe): Origin-Destination matrix.
+    return:
+        list of <u, v, cost> pairs.
+    """
+    node_pairs = []
+    # get all node ids.
+    od_ids = od_df.columns.tolist()
+    del od_ids[0]
+    # combine each node id with each other assigning a cost too.
+    for col in od_ids:
+        costs = od_df[col]
+        # create a tuple of the data above and add it to a list.
+        for row, cost in zip(od_ids, costs):
+            node_pairs.append((row, col, cost))
+    return node_pairs
+
+
 def _replace_od_columns_with_node_ids(od_df, node_ids_df, val_col='Node ID', key_col='Reg_unit'):
     """Method to replace all OD Matrix columns' names with the
     corresponding node ids.
@@ -328,7 +351,6 @@ def _replace_od_columns_with_node_ids(od_df, node_ids_df, val_col='Node ID', key
     reg_node_dict = pd.Series(node_ids_df[val_col].values, index=node_ids_df[key_col]).to_dict()
     # replace all names of the od-matrix with node ids and return
     region_names_list = [reg_node_dict.get(x, x) for x in region_names_list]
-    pdb.set_trace()
     od_df.columns = region_names_list
     return od_df
 
@@ -347,10 +369,10 @@ def _update_edges_with_loads(graph, edges, nodes_pairs_list):
     import network_scenarios as net_scens
     net_ops.add_new_column_to_dataframe(edges, 'traffic')
     for pair in nodes_pairs_list:
-        u, v = pair
+        u, v, cost = pair
         if u is not v:
             net_scens.update_edges_list_with_min_path_traffic(
-                graph, edges, u, v, 'traffic', 5
+                graph, edges, u, v, 'traffic', cost
             )
 
 
