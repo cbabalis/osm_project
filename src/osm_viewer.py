@@ -119,7 +119,7 @@ def view_edges_network(edges):
     lons = []
     names = []
     thickness = []
-    print(len(edges))
+    print("edges are ", len(edges))
     thousands_counter = 0
     for feature, name, traff in zip(edges.geometry, edges.name, edges.traffic):
         if isinstance(feature, shapely.geometry.linestring.LineString):
@@ -162,7 +162,7 @@ def view_edges_network(edges):
                 colorscale=[[0, 'green'],
                             [1, 'red']],
                 cmin=0,
-                cmax=1000),
+                cmax=10000),
             line={'color':'red'},
         )
     )
@@ -192,11 +192,13 @@ def first_method():
 
 
 def second_method():
-    fpath = '/home/blaxeep/workspace/osm_project/data/all_edges.csv'
+    #fpath = '/home/blaxeep/workspace/osm_project/data/all_edges.csv'
+    fpath = '/home/blaxeep/Downloads/bab_edges.csv'
     df = read_data_from_file(fpath, delim=',')
     df['geometry'] = df['geometry'].apply(wkt.loads)
     gdf = gpd.GeoDataFrame(df, crs='epsg:4326')
     view_edges_network(gdf[gdf['traffic']>0])
+    #view_edges_network(gdf)
 
 
 def show_stats_in_map(stats_fpath, stat_to_show=''):
@@ -245,13 +247,19 @@ def od_viewer_to_map(csv_file, graph_file, lonlat_centres_file):
     # load graph and data with loads for cities from csv_file
     df = read_data_from_file(csv_file, ',')
     net_graph = net_ops.load_graph_from_disk(graph_file)
+    nodes, edges = net_ops.get_nodes_edges(net_graph)
     # assign cities to graph nodes
     reg_units_df = read_data_from_file(lonlat_centres_file, ',')
-    _assign_net_node_to_reg_unit(reg_units_df, net_graph)
-    pdb.set_trace()
+    node_id_list = _assign_net_node_to_reg_unit(reg_units_df, net_graph)
+    # replace names of regional units with node ids.
+    df = _replace_od_columns_with_node_ids(df, reg_units_df)
     # compute min path between cities in the network
+    node_pairs = net_ops.get_nodes_pairs(node_id_list)
+    nodes_pairs_list = create_nodes_pairs(node_id_list)
     # load edges of network with the corresponding loads
+    _update_edges_with_loads(net_graph, edges, nodes_pairs_list)
     # return loaded edges
+    pdb.set_trace()
     # load loaded edges to map
 
 
@@ -274,6 +282,76 @@ def _assign_net_node_to_reg_unit(df, net_graph):
         node_id_list.append(node_id)
     # assign it to a new list and then add it to the new column
     df['Node ID'] = node_id_list
+    return node_id_list
+
+
+def create_nodes_pairs(node_id_list):
+    """Method to create all possible pairs of node ids.
+    Given a list of node ids, combine each id with any other and
+    return a list of tuples of <u, v> nodes
+
+    Args:
+        node_id_list (list): list of string node ids
+    
+    return:
+        list of (u, v) tuples.
+    """
+    combo_list = []
+    iter_list = node_id_list
+    # for each element in list:
+    for elem in node_id_list:
+        # remove element from list and get all possible combinations and
+        # append the combinations to a new list
+        iter_list.remove(elem)
+        for iter_elem in iter_list:
+            combo_list.append((elem, iter_elem))
+    # return the list
+    return combo_list
+
+
+def _replace_od_columns_with_node_ids(od_df, node_ids_df, val_col='Node ID', key_col='Reg_unit'):
+    """Method to replace all OD Matrix columns' names with the
+    corresponding node ids.
+
+    Args:
+        od_df (Dataframe): Dataframe that represents an OD-Matrix. Columns
+        have string values of regions
+        node_ids_df (Dataframe): Contains information regarding the regional
+        units, their location on map and the corresponding node ids to our network.
+        
+    Return:
+        dataframe with node ids instead of string names as columns
+    """
+    # get all od-matrix columns in a list
+    region_names_list = od_df.columns.tolist()
+    # create a dictionary of <region: node_id> pairs from the node_ids_df dataframe
+    reg_node_dict = pd.Series(node_ids_df[val_col].values, index=node_ids_df[key_col]).to_dict()
+    # replace all names of the od-matrix with node ids and return
+    region_names_list = [reg_node_dict.get(x, x) for x in region_names_list]
+    pdb.set_trace()
+    od_df.columns = region_names_list
+    return od_df
+
+
+def update_edges_list_with_min_path_traffic(graph, edges, start1,
+                                            end1, new_col, val=100):
+    try:
+        shortest_path = net_ops.get_shortest_path(graph, start1, end1)
+        min_path_pairs = net_ops.get_nodes_pairs(shortest_path)
+        net_ops.update_edge_list(min_path_pairs, edges, new_col, val)
+    except networkx.exception.NetworkXNoPath:
+        print("no path between ", start1, end1)
+
+
+def _update_edges_with_loads(graph, edges, nodes_pairs_list):
+    import network_scenarios as net_scens
+    net_ops.add_new_column_to_dataframe(edges, 'traffic')
+    for pair in nodes_pairs_list:
+        u, v = pair
+        if u is not v:
+            net_scens.update_edges_list_with_min_path_traffic(
+                graph, edges, u, v, 'traffic', 5
+            )
 
 
 def main():
@@ -283,7 +361,7 @@ def main():
     root_dir = '/home/blaxeep/workspace/osm_project/data/viewer_data/'
     graph_src = root_dir + 'greece-graph.graphml'
     od_src = root_dir + 'od_matrix.csv'
-    reg_src = root_dir + 'reg_units_coords.csv'
+    reg_src = root_dir + 'reg_units_coords_node_id.csv'
     od_viewer_to_map(od_src, graph_src, reg_src)
 
 
