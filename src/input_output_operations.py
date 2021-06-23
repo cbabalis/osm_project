@@ -8,7 +8,6 @@ import csv
 import pandas as pd
 import pdb
 
-
 def get_u_v_pairs_from_file(in_file):
     """Method to read a csv file and to get all the (u,v) pairs inside
     it with their cost values, too.
@@ -102,7 +101,7 @@ def convert_csv_to_nodes(csv_filepath, cols=['latitude', 'longitude', '@id', 'br
     return osm_nodes_with_coords
 
 
-def get_routes_from_textfile(txtfilepath):
+def get_route_node_ids_from_textfile(txtfilepath):
     """Method to read a file in the disk and to convert its data to a dictionary
     of <vehicle: list of ids> pairs.
 
@@ -117,10 +116,10 @@ def get_routes_from_textfile(txtfilepath):
     file_contents = ''
     with open(txtfilepath, 'r') as f:
         file_contents = f.read()
-    # split the contents to the vehicles accordingly
-    text_routes_list = _convert_text_to_routes_text_list(file_contents)
-    pdb.set_trace()
+    # split the contents to the vehicles accordingly and
     # split the nodes for each vehicle
+    text_routes_list = _convert_text_to_routes_text_list(file_contents)
+    return text_routes_list
 
 
 def _convert_text_to_routes_text_list(text_contents):
@@ -166,6 +165,18 @@ def _refine_route_nodes(route_nodes):
             # make nodes int and return them
             refined_routes.append(int(route))
     return refined_routes
+
+
+def write_od_to_csv(od_list, file_to_write_in_disk):
+    """Method to write an origin-destination list of lists to a csv file.
+
+    Args:
+        od_list (list): List of lists
+        file_to_write_in_disk (str): filepath for the results.
+    """
+    with open(file_to_write_in_disk, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerows(od_list)
 
 
 def _process_raw_osm_id(df, id_col='node_id'):

@@ -142,38 +142,34 @@ def view_edges_network(edges):
         if thousands_counter % 1000 == 0:
             print(thousands_counter)
     
-    colors = map_traffic_to_color(thickness)
+    colors = thickness #map_traffic_to_color(thickness)
     colors = np.array(colors)
+    colors[colors == None] = 0 # make none values go
+    colors = colors.astype(int)
+    colors = colors / 10000000
 
-    fig = px.line_geo(lat=lats, lon=lons) #, hover_name=names)
-    fig.add_trace(go.Scattermapbox(
-        #mode = "markers+lines",
-        mode = "lines",
-        lon = [-50, -60,40],
-        lat = [30, 10, -20],
-        marker = {'size': 10}))
+    fig = px.line_geo(lat=lats, lon=lons) #, color=colors) #, hover_name=names)
     fig.add_trace(
         go.Scattermapbox(
             lon = lons,
             lat = lats,
+            mode='lines+markers',
             marker=dict(
-                size=10,
+                size=0,
                 showscale=True,
-                colorscale=[[0, 'green'],
-                            [1, 'red']],
+                colorscale='armyrose', #[[0, 'green'], [1, 'red']],
                 cmin=0,
-                cmax=2000),
-            line={'color':'red'},
+                cmax=max(colors)),
         )
     )
-    fig.add_trace(
-        go.Scattermapbox(
-            lon = lons,
-            lat = lats,
-            mode='lines',
-            line={'color':'green'},
-        )
-    )
+    # fig.add_trace(
+    #     go.Scattermapbox(
+    #         lon = lons,
+    #         lat = lats,
+    #         mode='lines',
+    #         line={'color':'green'},
+    #     )
+    # )
     fig.update_layout(
         margin ={'l':0,'t':0,'b':0,'r':0},
         mapbox = {
@@ -193,12 +189,11 @@ def first_method():
 
 def second_method():
     #fpath = '/home/blaxeep/workspace/osm_project/data/all_edges.csv'
-    fpath = '/home/blaxeep/Downloads/bab_edges.csv'
+    fpath = '/home/blaxeep/Downloads/edges_with_od.csv'
     df = read_data_from_file(fpath, delim=',')
     df['geometry'] = df['geometry'].apply(wkt.loads)
     gdf = gpd.GeoDataFrame(df, crs='epsg:4326')
-    view_edges_network(gdf[gdf['traffic']>0])
-    #view_edges_network(gdf)
+    view_edges_network(gdf[gdf['traffic']>10000])
 
 
 def show_stats_in_map(stats_fpath, stat_to_show=''):
@@ -371,20 +366,37 @@ def _update_edges_with_loads(graph, edges, nodes_pairs_list):
     for pair in nodes_pairs_list:
         u, v, cost = pair
         if u is not v:
+            c = _compute_cost(cost)
             net_scens.update_edges_list_with_min_path_traffic(
-                graph, edges, u, v, 'traffic', cost
+                graph, edges, u, v, 'traffic', c
             )
+
+
+def _compute_cost(cost):
+    """Method to compute the actual cost per movement for edges.
+
+    Args:
+        cost (float): cost for movement
+    return:
+        the actual cost as it is computed.
+    """
+    # function as given by abal
+    c = cost / 1000 # for tons
+    c = c / 20 # for the tons per vehicle
+    c = c / 52 # for the weeks
+    # return integer as it is vehicle. no upper or lower limit assigned.
+    return int(c)
 
 
 def main():
     #show_stats_in_map('/home/blaxeep/workspace/osm_project/data/regional_units_dataset_osm/13_regional_units.geojson', stat_to_show='population')
     #first_method()
-    #second_method() # it has the network road
+    second_method() # it has the network road
     root_dir = '/home/blaxeep/workspace/osm_project/data/viewer_data/'
     graph_src = root_dir + 'greece-graph.graphml'
     od_src = root_dir + 'od_matrix.csv'
     reg_src = root_dir + 'reg_units_coords_node_id.csv'
-    od_viewer_to_map(od_src, graph_src, reg_src)
+    #od_viewer_to_map(od_src, graph_src, reg_src)
 
 
 if __name__ == '__main__':

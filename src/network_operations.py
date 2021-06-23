@@ -352,6 +352,19 @@ def compute_distance_matrix(csv_nodes_path, titles='', annotations='distance'):
     return dist_od
 
 
+def compare_elems(a_list):
+    counter = 0
+    similarities = {}
+    for this in a_list:
+        for that in a_list:
+            if this == that:
+                counter += 1
+        if counter > 2:
+            similarities[this] = counter
+        counter = 0
+    return similarities
+
+
 def add_u_v_coords_to_edges(nodes, edges):
     """ #TODO maybe this and the following methods need to be removed. check
 
