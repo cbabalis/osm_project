@@ -193,7 +193,7 @@ def second_method():
     df = read_data_from_file(fpath, delim=',')
     df['geometry'] = df['geometry'].apply(wkt.loads)
     gdf = gpd.GeoDataFrame(df, crs='epsg:4326')
-    view_edges_network(gdf[gdf['traffic']>10000])
+    view_edges_network(gdf[gdf['traffic']>0])
 
 
 def show_stats_in_map(stats_fpath, stat_to_show=''):
@@ -253,7 +253,7 @@ def od_viewer_to_map(csv_file, graph_file, lonlat_centres_file):
     # load edges of network with the corresponding loads
     _update_edges_with_loads(net_graph, edges, nodes_pairs_list)
     # return loaded edges
-    pdb.set_trace()
+    edges.to_csv('~/Downloads/updated_edges.csv')
     # load loaded edges to map
 
 
@@ -391,12 +391,12 @@ def _compute_cost(cost):
 def main():
     #show_stats_in_map('/home/blaxeep/workspace/osm_project/data/regional_units_dataset_osm/13_regional_units.geojson', stat_to_show='population')
     #first_method()
-    second_method() # it has the network road
+    #second_method() # it has the network road
     root_dir = '/home/blaxeep/workspace/osm_project/data/viewer_data/'
     graph_src = root_dir + 'greece-graph.graphml'
     od_src = root_dir + 'od_matrix.csv'
     reg_src = root_dir + 'reg_units_coords_node_id.csv'
-    #od_viewer_to_map(od_src, graph_src, reg_src)
+    od_viewer_to_map(od_src, graph_src, reg_src)
 
 
 if __name__ == '__main__':
